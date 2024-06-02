@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import * as THREE from "three";
-import * as dat from "dat.gui"
 import Galaxy from "./Galaxy.tsx";
 
-//const gui = new dat.GUI()
 const scene = new THREE.Scene();
 // Canvas
 const renderer = new THREE.WebGLRenderer();
@@ -53,7 +51,9 @@ function Scene() {
     };
   }, []);
 
-  return <Galaxy camera={camera} size={size} scene={scene} renderer={renderer} />;
+  return (
+    <Galaxy camera={camera} size={size} scene={scene} renderer={renderer} />
+  );
 }
 
 export default Scene;
