@@ -13,6 +13,13 @@ interface IProps {
   size: ISize;
 }
 
+interface IParameters {
+  count: number;
+  size: number;
+  radius: number;
+  branches: number;
+}
+
 function Galaxy(props: IProps) {
   //const canvasRef = useRef<HTMLCanvasElement>(null);
   const { renderer, scene, camera, size } = props;
@@ -25,10 +32,12 @@ function Galaxy(props: IProps) {
   controls.enableDamping = true;
 
   //Parameters
-  const parameters = {
+
+  const parameters: IParameters = {
     count: 1000,
     size: 0.02,
     radius: 5,
+    branches: 3,
   };
 
   let geometry: THREE.BufferGeometry;
@@ -47,10 +56,13 @@ function Galaxy(props: IProps) {
 
     for (let i = 0; i < parameters.count; i++) {
       const i3 = i * 3;
-      /* (- 0.5 center position) ( * 3 distance between points)*/
-      position[i3] = (Math.random() - 0.5) * 3;
-      position[i3 + 1] = (Math.random() - 0.5) * 3;
-      position[i3 + 2] = (Math.random() - 0.5) * 3;
+      const radius = Math.random() * parameters.radius;
+      const branchAngle =
+        ((i % parameters.branches) / parameters.branches) * Math.PI * 2;
+      /* (- 0.5 center position) ( * 3 distance between points) (Math.random() - 0.5) * 3;*/
+      position[i3] = Math.cos(branchAngle) * radius;
+      position[i3 + 1] = 0;
+      position[i3 + 2] = Math.sin(branchAngle) * radius;
     }
 
     geometry.setAttribute("position", new THREE.BufferAttribute(position, 3));
@@ -67,28 +79,29 @@ function Galaxy(props: IProps) {
     points = new THREE.Points(geometry, material);
     scene.add(points);
   };
+
   //Tweak
   const gui = new dat.GUI();
+  const addTweaks = (
+    name: keyof IParameters,
+    min: number,
+    max: number,
+    step: number,
+  ): void => {
+    gui.add(parameters, name, min, max, step).onFinishChange(generateGalaxy);
+  };
+
   useEffect(() => {
     generateGalaxy();
-
-    gui
-      .add(parameters, "count", 100, 1000000, 100)
-      .onFinishChange(generateGalaxy);
-    gui
-      .add(parameters, "size", 0.001, 0.1, 0.001)
-      .onFinishChange(generateGalaxy);
-    gui
-      .add(parameters, "radius", 0.01, 20, 0.01)
-      .onFinishChange(generateGalaxy);
-
+    addTweaks("count", 100, 1000000, 100);
+    addTweaks("size", 0.001, 0.1, 0.001);
+    addTweaks("radius", 0.01, 20, 0.01);
+    addTweaks("branches", 1, 20, 1);
     camera.position.z = 5;
-
     const tick = () => {
       requestAnimationFrame(tick);
       renderer.render(scene, camera);
     };
-
     tick();
   }, []);
 
