@@ -18,6 +18,7 @@ interface IParameters {
   size: number;
   radius: number;
   branches: number;
+  spin: number;
 }
 
 function Galaxy(props: IProps) {
@@ -38,6 +39,7 @@ function Galaxy(props: IProps) {
     size: 0.02,
     radius: 5,
     branches: 3,
+    spin: 1,
   };
 
   let geometry: THREE.BufferGeometry;
@@ -57,12 +59,13 @@ function Galaxy(props: IProps) {
     for (let i = 0; i < parameters.count; i++) {
       const i3 = i * 3;
       const radius = Math.random() * parameters.radius;
+      const spinAngle = radius * parameters.spin;
       const branchAngle =
         ((i % parameters.branches) / parameters.branches) * Math.PI * 2;
       /* (- 0.5 center position) ( * 3 distance between points) (Math.random() - 0.5) * 3;*/
-      position[i3] = Math.cos(branchAngle) * radius;
+      position[i3] = Math.cos(branchAngle + spinAngle) * radius;
       position[i3 + 1] = 0;
-      position[i3 + 2] = Math.sin(branchAngle) * radius;
+      position[i3 + 2] = Math.sin(branchAngle + spinAngle) * radius;
     }
 
     geometry.setAttribute("position", new THREE.BufferAttribute(position, 3));
@@ -97,6 +100,7 @@ function Galaxy(props: IProps) {
     addTweaks("size", 0.001, 0.1, 0.001);
     addTweaks("radius", 0.01, 20, 0.01);
     addTweaks("branches", 1, 20, 1);
+    addTweaks("spin", -5, 5, 0.001);
     camera.position.z = 5;
     const tick = () => {
       requestAnimationFrame(tick);
