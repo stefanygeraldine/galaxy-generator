@@ -39,13 +39,13 @@ function Galaxy(props: IProps) {
   //Parameters
 
   const parameters: IParameters = {
-    count: 1000,
+    count: 73000,
     size: 0.02,
     radius: 5,
     branches: 3,
-    spin: 1,
+    spin: 3,
     randomness: 0.2,
-    randomnessPower: 3,
+    randomnessPower: 5,
     insideColor: "#ff6030",
     outsideColor: "#1b3984",
   };
@@ -141,9 +141,16 @@ function Galaxy(props: IProps) {
     addColor("insideColor");
     addColor("outsideColor");
 
-    camera.position.z = 5;
+    //camera.position.z = 5;
+
+    // Posicionar la cámara por encima del cubo
+    camera.position.set(0, 10, 10); // x, y, z (la cámara está a 5 unidades por encima del cubo)
+    camera.lookAt(points.position);
+    //const clock = new THREE.Clock();
+
     const tick = () => {
       requestAnimationFrame(tick);
+      points.rotation.y += 0.01;
       renderer.render(scene, camera);
     };
     tick();
