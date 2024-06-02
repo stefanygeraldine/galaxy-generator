@@ -19,6 +19,10 @@ interface IParameters {
   radius: number;
   branches: number;
   spin: number;
+  randomness: number;
+  randomnessPower: number;
+  insideColor: string;
+  outsideColor: string;
 }
 
 function Galaxy(props: IProps) {
@@ -40,6 +44,10 @@ function Galaxy(props: IProps) {
     radius: 5,
     branches: 3,
     spin: 1,
+    randomness: 0.2,
+    randomnessPower: 3,
+    insideColor: "#ff6030",
+    outsideColor: "#1b3984",
   };
 
   let geometry: THREE.BufferGeometry;
@@ -55,20 +63,42 @@ function Galaxy(props: IProps) {
     }
     geometry = new THREE.BufferGeometry();
     const position = new Float32Array(parameters.count * 3);
+    const colors = new Float32Array(parameters.count * 3);
+    const insideColor = new THREE.Color(parameters.insideColor);
+    const outsideColor = new THREE.Color(parameters.outsideColor);
 
     for (let i = 0; i < parameters.count; i++) {
+      //Positions
       const i3 = i * 3;
       const radius = Math.random() * parameters.radius;
       const spinAngle = radius * parameters.spin;
       const branchAngle =
         ((i % parameters.branches) / parameters.branches) * Math.PI * 2;
+
+      const getRandomness = () =>
+        Math.pow(Math.random(), parameters.randomnessPower) *
+        (Math.random() < 0.5 ? 1 : -1);
+      // Math.pow(Math.random(), parameters.randomness) * (Math.random() < 0.5 ? 1 : -1);
+
       /* (- 0.5 center position) ( * 3 distance between points) (Math.random() - 0.5) * 3;*/
-      position[i3] = Math.cos(branchAngle + spinAngle) * radius;
-      position[i3 + 1] = 0;
-      position[i3 + 2] = Math.sin(branchAngle + spinAngle) * radius;
+      position[i3] =
+        Math.cos(branchAngle + spinAngle) * radius + getRandomness();
+      position[i3 + 1] = getRandomness();
+      position[i3 + 2] =
+        Math.sin(branchAngle + spinAngle) * radius + getRandomness();
+
+      geometry.setAttribute("position", new THREE.BufferAttribute(position, 3));
+
+      //Colors
+      const mixedColor = insideColor.clone();
+      mixedColor.lerp(outsideColor, radius / parameters.radius);
+
+      colors[i3] = mixedColor.r;
+      colors[i3 + 1] = mixedColor.g;
+      colors[i3 + 2] = mixedColor.b;
     }
 
-    geometry.setAttribute("position", new THREE.BufferAttribute(position, 3));
+    geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
 
     // Material
     material = new THREE.PointsMaterial({
@@ -76,6 +106,7 @@ function Galaxy(props: IProps) {
       sizeAttenuation: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
+      vertexColors: true,
     });
 
     // Points
@@ -94,6 +125,10 @@ function Galaxy(props: IProps) {
     gui.add(parameters, name, min, max, step).onFinishChange(generateGalaxy);
   };
 
+  const addColor = (name: keyof IParameters): void => {
+    gui.addColor(parameters, name).onFinishChange(generateGalaxy);
+  };
+
   useEffect(() => {
     generateGalaxy();
     addTweaks("count", 100, 1000000, 100);
@@ -101,6 +136,11 @@ function Galaxy(props: IProps) {
     addTweaks("radius", 0.01, 20, 0.01);
     addTweaks("branches", 1, 20, 1);
     addTweaks("spin", -5, 5, 0.001);
+    addTweaks("randomness", 0, 2, 0.001);
+    addTweaks("randomnessPower", 1, 10, 0.001);
+    addColor("insideColor");
+    addColor("outsideColor");
+
     camera.position.z = 5;
     const tick = () => {
       requestAnimationFrame(tick);
